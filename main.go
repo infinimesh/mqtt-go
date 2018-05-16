@@ -65,7 +65,7 @@ func handleConn(c net.Conn) {
 			break
 		}
 
-		id := p.(*packet.ConnectControlPacket).ClientIdentifier
+		id := p.(*packet.ConnectControlPacket).ConnectPayload.ClientID
 		fmt.Printf("Client with ID %v connected!", id)
 	}
 	fmt.Println("Exited loop of connection")

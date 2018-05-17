@@ -16,20 +16,24 @@ type ConnectFlags struct {
 	CleanSession bool
 }
 
-type VariableHeaderConnect struct {
+type ConnectControlPacket struct {
+	FixedHeader    FixedHeader
+	VariableHeader ConnectVariableHeader
+	ConnectPayload ConnectPayload
+}
+
+type ConnectVariableHeader struct {
 	ProtocolName  string
 	ProtocolLevel byte
 	ConnectFlags  ConnectFlags
 	KeepAlive     int
 }
 
-type ConnectControlPacket struct {
-	FixedHeader    FixedHeader
-	VariableHeader VariableHeaderConnect
-	ConnectPayload ConnectPayload
+type ConnectPayload struct {
+	ClientID string
 }
 
-func getConnectVariableHeader(r io.Reader) (hdr VariableHeaderConnect, len int, err error) {
+func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, err error) {
 	// Protocol name
 	protocolName, n, err := getProtocolName(r)
 	len += n

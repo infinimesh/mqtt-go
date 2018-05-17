@@ -81,10 +81,6 @@ func getFixedHeader(r io.Reader) (fh FixedHeader, err error) {
 	return
 }
 
-type ConnectPayload struct {
-	ClientID string
-}
-
 func readConnectPayload(r io.Reader, len int) (ConnectPayload, error) {
 	payloadBytes := make([]byte, len)
 	n, err := io.ReadFull(r, payloadBytes)

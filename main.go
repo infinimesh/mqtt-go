@@ -10,16 +10,6 @@ import (
 	"github.com/infinimesh/packet"
 )
 
-// type myListener struct {
-// 	inner net.Listener
-// }
-
-// func (l *myListener) Accept() (net.Conn, error) {
-// 	conn, err := l.inner.Accept()
-// 	fmt.Println("Accept!")
-// 	return conn, err
-// }
-
 //openssl req  -nodes -new -x509  -keyout server.key -out server.cert
 func main() {
 	pair, err := tls.LoadX509KeyPair("./server.cert", "./server.key")

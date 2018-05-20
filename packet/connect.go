@@ -47,7 +47,7 @@ func SerializeFixedHeader(fh *FixedHeader, w io.Writer, remainingLength int) err
 	b := byte(fh.ControlPacketType) << 4
 
 	// Flags must be < 16
-	b = b ^ fh.Flags
+	b |= fh.Flags
 
 	w.Write([]byte{b})
 

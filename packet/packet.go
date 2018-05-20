@@ -177,6 +177,5 @@ func serializeRemainingLength(w io.Writer, len int) (n int, err error) {
 			break
 		}
 	}
-	fmt.Println("write", stuffToWrite)
 	return w.Write(stuffToWrite)
 }

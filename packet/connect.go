@@ -49,8 +49,6 @@ func SerializeFixedHeader(fh *FixedHeader, w io.Writer, remainingLength int) err
 	// Flags must be < 16
 	b = b ^ fh.Flags
 
-	// _, err := w.Write(b)
-	fmt.Println("write Fixed header", b)
 	w.Write([]byte{b})
 
 	serializeRemainingLength(w, remainingLength)

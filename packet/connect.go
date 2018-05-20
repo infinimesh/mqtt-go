@@ -52,15 +52,17 @@ func SerializeFixedHeader(fh *FixedHeader, w io.Writer, remainingLength int) err
 	w.Write([]byte{b})
 
 	serializeRemainingLength(w, remainingLength)
-	// return err
 	return nil
 
-	// TODO flags !
 }
 
-func SerializeConnAckControlPacket(connAck *ConnAckControlPacket, w io.Writer) {
-	SerializeFixedHeader(&connAck.FixedHeader, w, 2 /* always 2 for ConnAck */)
-	SerializeConnAckVariableHeader(&connAck.VariableHeader, w)
+func SerializeConnAckControlPacket(connAck *ConnAckControlPacket, w io.Writer) error {
+	if err := SerializeFixedHeader(&connAck.FixedHeader, w, 2 /* always 2 for ConnAck */); err != nil {
+		return err
+	}
+	if err := SerializeConnAckVariableHeader(&connAck.VariableHeader, w); err != nil {
+		return err
+	}
 }
 
 func SerializeConnAckVariableHeader(c *ConnAckVariableHeader, w io.Writer) error {

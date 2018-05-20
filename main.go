@@ -47,16 +47,41 @@ func main() {
 }
 
 func handleConn(c net.Conn) {
+	p, err := packet.ReadPacket(c)
+	if err != nil {
+		fmt.Printf("Error while reading packet in client loop: %v\n", err)
+		return
+	}
+
+	connectPacket, ok := p.(*packet.ConnectControlPacket)
+	if !ok {
+		fmt.Println("Got wrong packet as first packjet..need connect!")
+		return
+	}
+
+	id := connectPacket.ConnectPayload.ClientID
+	fmt.Printf("Client with ID %v connected!\n", id)
+
+	resp := packet.ConnAckControlPacket{
+		FixedHeader: packet.FixedHeader{
+			ControlPacketType: packet.CONNACK,
+		},
+		VariableHeader: packet.ConnAckVariableHeader{},
+	}
+
+	packet.SerializeConnAckControlPacket(&resp, c)
+
 	for {
-		// For the moment read only one
 		p, err := packet.ReadPacket(c)
 		if err != nil {
-			fmt.Printf("Error while reading packet in client loop: %v", err)
+			fmt.Printf("Error while reading packet in client loop: %v. Disconnecting client.\n", err)
+			c.Close()
 			break
 		}
 
-		id := p.(*packet.ConnectControlPacket).ConnectPayload.ClientID
-		fmt.Printf("Client with ID %v connected!", id)
+		switch p.(type) {
+		case packet.ConnectControlPacket:
+		}
 	}
 	fmt.Println("Exited loop of connection")
 }

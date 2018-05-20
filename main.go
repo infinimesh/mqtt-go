@@ -7,7 +7,7 @@ import (
 	"io/ioutil"
 	"net"
 
-	"github.com/infinimesh/packet"
+	"github.com/infinimesh/mqtt-go/packet"
 )
 
 //openssl req  -nodes -new -x509  -keyout server.key -out server.cert

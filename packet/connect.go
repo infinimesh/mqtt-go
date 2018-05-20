@@ -49,10 +49,13 @@ func SerializeFixedHeader(fh *FixedHeader, w io.Writer, remainingLength int) err
 	// Flags must be < 16
 	b |= fh.Flags
 
-	w.Write([]byte{b})
+	_, err := w.Write([]byte{b})
+	if err != nil {
+		return err
+	}
 
-	serializeRemainingLength(w, remainingLength)
-	return nil
+	_, err = serializeRemainingLength(w, remainingLength)
+	return err
 
 }
 

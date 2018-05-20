@@ -66,6 +66,7 @@ func SerializeConnAckControlPacket(connAck *ConnAckControlPacket, w io.Writer) e
 	if err := SerializeConnAckVariableHeader(&connAck.VariableHeader, w); err != nil {
 		return err
 	}
+	return nil
 }
 
 func SerializeConnAckVariableHeader(c *ConnAckVariableHeader, w io.Writer) error {

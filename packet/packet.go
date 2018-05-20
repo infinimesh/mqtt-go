@@ -1,6 +1,7 @@
 package packet
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -30,6 +31,7 @@ const (
 // Packet Type, Packet-specific Flags and the length of the rest of the message.
 type FixedHeader struct {
 	ControlPacketType ControlPacketType
+	Flags             byte
 	RemainingLength   int
 }
 
@@ -81,36 +83,6 @@ func getFixedHeader(r io.Reader) (fh FixedHeader, err error) {
 	return
 }
 
-func readConnectPayload(r io.Reader, len int) (ConnectPayload, error) {
-	payloadBytes := make([]byte, len)
-	n, err := io.ReadFull(r, payloadBytes)
-	// TODO set upper limit for payload
-	// TODO only stream it
-	if err != nil {
-		return ConnectPayload{}, err
-	}
-	if n != len {
-		return ConnectPayload{}, errors.New("Payload length incorrect")
-	}
-
-	// CONNECT MUST have the client id
-	// REGEX 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ
-	// MAY allow more than that, but this must be possible
-
-	// Client Identifier, Will Topic, Will Message, User Name, Password
-
-	// TODO am besten so viel einlesen wie moeglich, und dann reslicen / reader zusammenstecken
-
-	clientIDLengthBytes := payloadBytes[:2]
-	clientIDLength := binary.BigEndian.Uint16(clientIDLengthBytes)
-
-	clientID := string(payloadBytes[2 : 2+clientIDLength])
-	return ConnectPayload{
-		ClientID: clientID,
-	}, nil
-
-}
-
 // Return specific error, so server can answer with correct packet & error code (i.e. CONNACK with error 0x01)
 func ReadPacket(r io.Reader) (ControlPacket, error) {
 	fh, err := getFixedHeader(r)
@@ -118,19 +90,27 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 		return nil, err
 	}
 
+	// Ensure that we always read the remaining bytes
+	bufRemaining := make([]byte, fh.RemainingLength)
+	n, err := io.ReadFull(r, bufRemaining)
+	if n != fh.RemainingLength {
+		return nil, errors.New("Short read!")
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	remainingReader := bytes.NewBuffer(bufRemaining)
+
 	switch fh.ControlPacketType {
 	case CONNECT:
-		fmt.Println("Got CONNECT Message!")
-		// TODO wie variable is variable header, kommts auf message type an?
-
-		// The payload of the CONNECT Packet contains one or more length-prefixed fields, whose presence is determined by the flags in the variable header. These fields, if present, MUST appear in the order Client Identifier, Will Topic, Will Message, User Name, Password [MQTT-3.1.3-1].
-		vh, variableHeaderSize, err := getConnectVariableHeader(r)
+		vh, variableHeaderSize, err := getConnectVariableHeader(remainingReader)
 		if err != nil {
 			return nil, err
 		}
 		payloadLength := fh.RemainingLength - variableHeaderSize
 
-		cp, err := readConnectPayload(r, payloadLength)
+		cp, err := readConnectPayload(remainingReader, payloadLength)
 		if err != nil {
 			return nil, err
 		}
@@ -142,9 +122,12 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 		}
 
 		return packet, nil
-
+	case PUBLISH:
+		fmt.Println("Received publish packet")
+	case DISCONNECT:
+		fmt.Println("Client disconnected")
 	default:
-		fmt.Println("IDK can't handle this")
+		fmt.Println("IDK can't handle this", fh.ControlPacketType)
 	}
 
 	return nil, nil
@@ -177,4 +160,23 @@ func getRemainingLength(r io.Reader) (remaining int, err error) {
 		}
 	}
 	return
+}
+
+func serializeRemainingLength(w io.Writer, len int) (n int, err error) {
+	stuffToWrite := make([]byte, 0)
+	for {
+		encodedByte := byte(len % 128)
+		len = len / 128
+
+		if len > 0 {
+			encodedByte |= 128 //set topmost bit to true because we
+			//still have stuff to write
+			stuffToWrite = append(stuffToWrite, encodedByte)
+		} else {
+			stuffToWrite = append(stuffToWrite, encodedByte)
+			break
+		}
+	}
+	fmt.Println("write", stuffToWrite)
+	return w.Write(stuffToWrite)
 }

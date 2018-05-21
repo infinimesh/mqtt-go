@@ -1,3 +1,20 @@
+//--------------------------------------------------------------------------
+// Copyright 2018 infinimesh, INC
+// www.infinimesh.io 
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//       http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License.
+//--------------------------------------------------------------------------
+
 package packet
 
 import (
@@ -9,7 +26,7 @@ import (
 
 type ConnectFlags struct {
 	UserName     bool
-	Passwore     bool
+	Password     bool
 	WillRetain   bool
 	WillQoS      byte // 2 bytes actually
 	WillFlag     bool
@@ -122,7 +139,7 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 	}
 
 	hdr.ConnectFlags.UserName = connectFlagsByte[0]&128 == 1
-	hdr.ConnectFlags.Passwore = connectFlagsByte[0]&64 == 1
+	hdr.ConnectFlags.Password = connectFlagsByte[0]&64 == 1
 	hdr.ConnectFlags.WillRetain = connectFlagsByte[0]&32 == 1
 	hdr.ConnectFlags.WillFlag = connectFlagsByte[0]&4 == 1
 	hdr.ConnectFlags.CleanSession = connectFlagsByte[0]&2 == 1

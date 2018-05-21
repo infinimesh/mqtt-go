@@ -38,6 +38,7 @@ func main() {
 }
 
 func handleConn(c net.Conn) {
+	defer fmt.Println("Exited loop of connection")
 	p, err := packet.ReadPacket(c)
 	if err != nil {
 		fmt.Printf("Error while reading packet in client loop: %v\n", err)
@@ -60,13 +61,17 @@ func handleConn(c net.Conn) {
 		VariableHeader: packet.ConnAckVariableHeader{},
 	}
 
-	packet.SerializeConnAckControlPacket(&resp, c)
+	_, err = resp.WriteTo(c)
+	if err != nil {
+		fmt.Println("Failed to write ConnAck. Closing connection.")
+		return
+	}
 
 	for {
 		p, err := packet.ReadPacket(c)
 		if err != nil {
 			fmt.Printf("Error while reading packet in client loop: %v. Disconnecting client.\n", err)
-			c.Close()
+			_ = c.Close()
 			break
 		}
 
@@ -74,5 +79,4 @@ func handleConn(c net.Conn) {
 		case packet.ConnectControlPacket:
 		}
 	}
-	fmt.Println("Exited loop of connection")
 }

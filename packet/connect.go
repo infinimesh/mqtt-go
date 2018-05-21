@@ -39,11 +39,6 @@ type ConnectControlPacket struct {
 	ConnectPayload ConnectPayload
 }
 
-type ConnAckControlPacket struct {
-	FixedHeader    FixedHeader
-	VariableHeader ConnAckVariableHeader
-}
-
 type ConnectVariableHeader struct {
 	ProtocolName  string
 	ProtocolLevel byte
@@ -53,56 +48,6 @@ type ConnectVariableHeader struct {
 
 type ConnectPayload struct {
 	ClientID string
-}
-
-type ConnAckVariableHeader struct {
-	SessionPresent bool
-	ReturnCode     byte
-}
-
-func SerializeFixedHeader(fh *FixedHeader, w io.Writer, remainingLength int) error {
-	b := byte(fh.ControlPacketType) << 4
-
-	// Flags must be < 16
-	b |= fh.Flags
-
-	_, err := w.Write([]byte{b})
-	if err != nil {
-		return err
-	}
-
-	_, err = serializeRemainingLength(w, remainingLength)
-	return err
-
-}
-
-func SerializeConnAckControlPacket(connAck *ConnAckControlPacket, w io.Writer) error {
-	if err := SerializeFixedHeader(&connAck.FixedHeader, w, 2 /* always 2 for ConnAck */); err != nil {
-		return err
-	}
-	if err := SerializeConnAckVariableHeader(&connAck.VariableHeader, w); err != nil {
-		return err
-	}
-	return nil
-}
-
-func SerializeConnAckVariableHeader(c *ConnAckVariableHeader, w io.Writer) error {
-	buf := make([]byte, 2)
-	connAckFlags := buf[0]
-	connAckFlags |= 1
-
-	buf[1] = c.ReturnCode
-
-	n, err := w.Write(buf)
-	if n != 2 {
-		return errors.New("Failed to serialize variable header")
-	}
-
-	if err != nil {
-		return errors.New("Failed to serialize variable header")
-	}
-
-	return nil
 }
 
 func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, err error) {

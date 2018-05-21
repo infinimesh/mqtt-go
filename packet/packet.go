@@ -196,3 +196,22 @@ func serializeRemainingLength(w io.Writer, len int) (n int, err error) {
 	}
 	return w.Write(stuffToWrite)
 }
+
+func (fh *FixedHeader) WriteTo(w io.Writer) (n int64, err error) {
+	remainingLength := fh.RemainingLength
+	b := byte(fh.ControlPacketType) << 4
+
+	// Flags must be < 16
+	b |= fh.Flags
+
+	bytesWritten, err := w.Write([]byte{b})
+	n += int64(bytesWritten)
+	if err != nil {
+		return
+	}
+
+	bytesWritten, err = serializeRemainingLength(w, remainingLength)
+	n += int64(bytesWritten)
+	return
+
+}

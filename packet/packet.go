@@ -140,7 +140,23 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 
 		return packet, nil
 	case PUBLISH:
-		fmt.Println("Received publish packet")
+		vh, vhLength, err := readPublishVariableHeader(remainingReader)
+		if err != nil {
+			return nil, err
+		}
+
+		payload, err := readPublishPayload(remainingReader, fh.RemainingLength-vhLength)
+		if err != nil {
+			return nil, err
+		}
+
+		packet := &PublishControlPacket{
+			FixedHeader:    fh,
+			VariableHeader: vh,
+			Payload:        payload,
+		}
+		return packet, nil
+
 	case DISCONNECT:
 		fmt.Println("Client disconnected")
 	default:
@@ -214,4 +230,16 @@ func (fh *FixedHeader) WriteTo(w io.Writer) (n int64, err error) {
 	n += int64(bytesWritten)
 	return
 
+}
+
+func readStringLength(r io.Reader) (len int, err error) {
+	buf := make([]byte, 2)
+	n, err := io.ReadFull(r, buf)
+	if err != nil {
+		return
+	}
+	if n != 2 {
+		return n, errors.New("Couldnt read required 2 bytes for string length")
+	}
+	return int(binary.BigEndian.Uint16(buf)), nil
 }

@@ -75,10 +75,10 @@ func handleConn(c net.Conn) {
 			break
 		}
 
-		switch p.(type) {
+		switch p := p.(type) {
 		case packet.ConnectControlPacket:
 		case *packet.PublishControlPacket:
-			println("Received Publish with payload:", string(p.(*packet.PublishControlPacket).Payload))
+			println("Received Publish with payload:", string(p.Payload))
 		}
 	}
 }

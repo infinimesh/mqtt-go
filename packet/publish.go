@@ -18,6 +18,7 @@
 package packet
 
 import (
+	"errors"
 	"io"
 )
 
@@ -33,7 +34,25 @@ type PublishVariableHeader struct {
 	PacketID int
 }
 
-func readPublishVariableHeader(r io.Reader) (vh PublishVariableHeader, len int, err error) {
+func interpretHeaderFlags(header byte) (dup, retain bool, qos qosLevel, err error) {
+	retain = header&1 > 0
+	dup = header&8 > 0
+
+	if header&2 > 0 && header&4 > 0 {
+		err = errors.New("Both bits for QoS are set, this is invalid")
+	}
+
+	if header&2 > 0 {
+		qos = qosLevelAtLeastOnce
+	} else if header&4 > 0 {
+		qos = qosLevelExactyleOnce
+	} else {
+		qos = qosLevelNone
+	}
+	return
+}
+
+func readPublishVariableHeader(r io.Reader, headerFlags byte) (vh PublishVariableHeader, len int, err error) {
 	topicLength, err := readStringLength(r)
 	len += 2
 	if err != nil {
@@ -48,13 +67,15 @@ func readPublishVariableHeader(r io.Reader) (vh PublishVariableHeader, len int, 
 
 	vh.Topic = string(bufTopic)
 
-	// TODO
-	// optional.only if qos 1 or 2
-	// vh.PacketID, err = readStringLength(r)
-	// if err != nil {
-	// 	return
-	// }
-	// len += 2
+	_, _, qos, _ := interpretHeaderFlags(headerFlags)
+
+	if qos == qosLevelAtLeastOnce || qos == qosLevelExactyleOnce {
+		vh.PacketID, err = readStringLength(r)
+		if err != nil {
+			return
+		}
+		len += 2
+	}
 
 	return
 }

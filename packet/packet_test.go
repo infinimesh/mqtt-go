@@ -26,7 +26,6 @@ import (
 )
 
 func TestGetRemainingLength(t *testing.T) {
-
 	var testCases = []struct {
 		input    []byte
 		expected int

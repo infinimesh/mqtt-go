@@ -27,6 +27,14 @@ import (
 
 type ControlPacketType byte
 
+type qosLevel int
+
+var (
+	qosLevelNone         qosLevel = 0
+	qosLevelAtLeastOnce  qosLevel = 1
+	qosLevelExactyleOnce qosLevel = 2
+)
+
 const (
 	CONNECT     = 1
 	CONNACK     = 2
@@ -140,7 +148,7 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 
 		return packet, nil
 	case PUBLISH:
-		vh, vhLength, err := readPublishVariableHeader(remainingReader)
+		vh, vhLength, err := readPublishVariableHeader(remainingReader, fh.Flags)
 		if err != nil {
 			return nil, err
 		}

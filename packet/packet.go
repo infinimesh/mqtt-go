@@ -30,11 +30,12 @@ type ControlPacketType byte
 type qosLevel int
 
 var (
-	qosLevelNone         qosLevel = 0
+	qosLevelNone         qosLevel
 	qosLevelAtLeastOnce  qosLevel = 1
 	qosLevelExactyleOnce qosLevel = 2
 )
 
+// Control Packet types
 const (
 	CONNECT     = 1
 	CONNACK     = 2
@@ -108,7 +109,6 @@ func getFixedHeader(r io.Reader) (fh FixedHeader, err error) {
 	return
 }
 
-// Return specific error, so server can answer with correct packet & error code (i.e. CONNACK with error 0x01)
 func ReadPacket(r io.Reader) (ControlPacket, error) {
 	fh, err := getFixedHeader(r)
 	if err != nil {
@@ -119,7 +119,7 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 	bufRemaining := make([]byte, fh.RemainingLength)
 	n, err := io.ReadFull(r, bufRemaining)
 	if n != fh.RemainingLength {
-		return nil, errors.New("Short read!")
+		return nil, errors.New("short read")
 	}
 	if err != nil {
 		return nil, err
@@ -127,6 +127,10 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 
 	remainingReader := bytes.NewBuffer(bufRemaining)
 
+	return parseToConcretePacket(remainingReader, fh)
+}
+
+func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPacket, error) {
 	switch fh.ControlPacketType {
 	case CONNECT:
 		vh, variableHeaderSize, err := getConnectVariableHeader(remainingReader)
@@ -167,11 +171,11 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 
 	case DISCONNECT:
 		fmt.Println("Client disconnected")
+		return nil, errors.New("Client disconnected")
 	default:
-		fmt.Println("IDK can't handle this", fh.ControlPacketType)
+		return nil, errors.New("Could not determine a specific control packet type")
 	}
 
-	return nil, nil
 }
 
 // starts with variable header

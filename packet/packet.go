@@ -30,11 +30,12 @@ type ControlPacketType byte
 type qosLevel int
 
 var (
-	qosLevelNone         qosLevel = 0
+	qosLevelNone         qosLevel
 	qosLevelAtLeastOnce  qosLevel = 1
 	qosLevelExactyleOnce qosLevel = 2
 )
 
+// Control Packet types
 const (
 	CONNECT     = 1
 	CONNACK     = 2
@@ -108,7 +109,6 @@ func getFixedHeader(r io.Reader) (fh FixedHeader, err error) {
 	return
 }
 
-// Return specific error, so server can answer with correct packet & error code (i.e. CONNACK with error 0x01)
 func ReadPacket(r io.Reader) (ControlPacket, error) {
 	fh, err := getFixedHeader(r)
 	if err != nil {
@@ -119,7 +119,7 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 	bufRemaining := make([]byte, fh.RemainingLength)
 	n, err := io.ReadFull(r, bufRemaining)
 	if n != fh.RemainingLength {
-		return nil, errors.New("Short read!")
+		return nil, errors.New("short read")
 	}
 	if err != nil {
 		return nil, err

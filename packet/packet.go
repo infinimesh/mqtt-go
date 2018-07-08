@@ -127,6 +127,10 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 
 	remainingReader := bytes.NewBuffer(bufRemaining)
 
+	return parseToConcretePacket(remainingReader, fh)
+}
+
+func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPacket, error) {
 	switch fh.ControlPacketType {
 	case CONNECT:
 		vh, variableHeaderSize, err := getConnectVariableHeader(remainingReader)
@@ -167,11 +171,11 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 
 	case DISCONNECT:
 		fmt.Println("Client disconnected")
+		return nil, errors.New("Client disconnected")
 	default:
-		fmt.Println("IDK can't handle this", fh.ControlPacketType)
+		return nil, errors.New("Could not determine a specific control packet type")
 	}
 
-	return nil, nil
 }
 
 // starts with variable header

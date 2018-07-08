@@ -44,8 +44,6 @@ func (p *ConnAckControlPacket) WriteTo(w io.Writer) (n int64, err error) {
 
 func (c *ConnAckVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
 	buf := make([]byte, 2)
-	connAckFlags := buf[0]
-	connAckFlags |= 1
 
 	buf[1] = c.ReturnCode
 

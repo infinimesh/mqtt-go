@@ -31,9 +31,9 @@ type PubAckVariableHeader struct {
 
 func (vh *PubAckVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
 	packetID := make([]byte, 2)
-	binary.BigEndian.PutUint16(packetId, vh.PacketId)
+	binary.BigEndian.PutUint16(packetID, vh.PacketID)
 
-	bytesWritten, err := w.Write(packetId)
+	bytesWritten, err := w.Write(packetID)
 	n += int64(bytesWritten)
 	if err != nil {
 		return

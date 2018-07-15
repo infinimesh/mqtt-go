@@ -25,8 +25,8 @@ jobs:
       - run: go get -u github.com/golang/dep/cmd/dep
       - run: go get -u github.com/alecthomas/gometalinter
       - run: gometalinter --install
-      - run: dep status
       - run: dep ensure
+      - run: dep status
       - run: go build -v ./...
       - run: gometalinter --vendor --exclude="\bexported \w+ (\S*['.]*)([a-zA-Z'.*]*) should have comment or be unexported\b" -j 8 ./...
       - run: go test -v ./...

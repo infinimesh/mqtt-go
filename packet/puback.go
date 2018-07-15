@@ -26,11 +26,11 @@ type PubackControlPacket struct {
 }
 
 type PubAckVariableHeader struct {
-	PacketId uint16
+	PacketID uint16
 }
 
 func (vh *PubAckVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
-	packetId := make([]byte, 2)
+	packetID := make([]byte, 2)
 	binary.BigEndian.PutUint16(packetId, vh.PacketId)
 
 	bytesWritten, err := w.Write(packetId)

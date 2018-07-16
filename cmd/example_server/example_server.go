@@ -41,7 +41,7 @@ func handleConn(c net.Conn) {
 	defer fmt.Println("Exited loop of connection")
 	p, err := packet.ReadPacket(c)
 	if err != nil {
-		fmt.Printf("Error while reading packet in client loop: %v\n", err)
+		fmt.Printf("Error while reading connect packet: %v\n", err)
 		return
 	}
 

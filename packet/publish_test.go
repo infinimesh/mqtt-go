@@ -5,9 +5,9 @@ import "github.com/stretchr/testify/assert"
 
 func TestInterpretHeaderFlags(t *testing.T) {
 	input := byte(11)
-	dup, retain, qos, err := interpretHeaderFlags(input)
+	hdr, err := interpretPublishHeaderFlags(input)
 	assert.NoError(t, err)
-	assert.True(t, dup)
-	assert.True(t, retain)
-	assert.Equal(t, QoSLevelAtLeastOnce, qos, "Expected at least once")
+	assert.True(t, hdr.Dup)
+	assert.True(t, hdr.Retain)
+	assert.Equal(t, QoSLevelAtLeastOnce, hdr.QoS, "Expected at least once")
 }

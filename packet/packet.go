@@ -29,6 +29,7 @@ type ControlPacketType byte
 
 type qosLevel int
 
+// MQTT Quality of Service levels
 const (
 	QoSLevelNone         qosLevel = 0
 	QoSLevelAtLeastOnce  qosLevel = 1

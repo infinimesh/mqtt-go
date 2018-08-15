@@ -187,18 +187,17 @@ func getRemainingLength(r io.Reader) (remaining int, err error) {
 	for i := 0; i < 4; i++ {
 		b := make([]byte, 1)
 		n, err := r.Read(b)
+		valueThisTime := int(b[0] & 127)
+		remaining += valueThisTime * multiplier
 		if err != nil {
-			return 0, errors.New("Couldnt get remaning length")
+			err = errors.New("couldnt get remaining length")
+			return remaining, err
 		}
 		if n != 1 {
 			return 0, errors.New("Failed to get rem len")
 		}
 
-		valueThisTime := int(b[0] & 127)
-
-		remaining += valueThisTime * multiplier
 		multiplier *= 128
-
 		moreBytes := b[0] & 128 // get only most significant bit
 		if moreBytes == 0 {
 			break

@@ -67,7 +67,10 @@ func readPublishVariableHeader(r io.Reader, headerFlags byte) (vh PublishVariabl
 
 	vh.Topic = string(bufTopic)
 
-	_, _, qos, _ := interpretHeaderFlags(headerFlags)
+	_, _, qos, err := interpretHeaderFlags(headerFlags)
+	if err != nil {
+		return PublishVariableHeader{}, len, err
+	}
 
 	if qos == qosLevelAtLeastOnce || qos == qosLevelExactyleOnce {
 		vh.PacketID, err = readStringLength(r)

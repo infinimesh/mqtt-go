@@ -32,7 +32,7 @@ func main() {
 	}
 
 	for {
-		conn, _ := listener.Accept()
+		conn, err := listener.Accept() // nolint: gosec
 		go handleConn(conn)
 	}
 }
@@ -71,7 +71,10 @@ func handleConn(c net.Conn) {
 		p, err := packet.ReadPacket(c)
 		if err != nil {
 			fmt.Printf("Error while reading packet in client loop: %v. Disconnecting client.\n", err)
-			_ = c.Close()
+			err := c.Close()
+			if err != nil {
+				fmt.Printf("Error when closing connection: %v\n")
+			}
 			break
 		}
 

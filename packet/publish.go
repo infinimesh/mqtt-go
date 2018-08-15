@@ -19,7 +19,6 @@ package packet
 
 import (
 	"errors"
-	"fmt"
 	"io"
 )
 
@@ -79,7 +78,6 @@ func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh Publis
 		if err != nil {
 			return
 		}
-		fmt.Println("QoS > 0, PacketID =", vh.PacketID)
 		len += 2
 	}
 

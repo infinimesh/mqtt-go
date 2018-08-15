@@ -17,8 +17,10 @@
 
 package packet
 
-import "io"
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"io"
+)
 
 type PubackControlPacket struct {
 	FixedHeader    FixedHeader
@@ -43,4 +45,16 @@ func (vh *PubAckVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
 
 func (p *PubackControlPacket) WriteTo(w io.Writer) (n int64, err error) {
 	return p.VariableHeader.WriteTo(w)
+}
+
+func NewPubAckControlPacket(packetID uint16) *PubackControlPacket {
+	return &PubackControlPacket{
+		FixedHeader: FixedHeader{
+			ControlPacketType: PUBACK,
+			RemainingLength:   2,
+		},
+		VariableHeader: PubAckVariableHeader{
+			PacketID: packetID,
+		},
+	}
 }

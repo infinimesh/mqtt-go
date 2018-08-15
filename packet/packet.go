@@ -29,10 +29,10 @@ type ControlPacketType byte
 
 type qosLevel int
 
-var (
-	qosLevelNone         qosLevel
-	qosLevelAtLeastOnce  qosLevel = 1
-	qosLevelExactyleOnce qosLevel = 2
+const (
+	QoSLevelNone         qosLevel = 0
+	QoSLevelAtLeastOnce  qosLevel = 1
+	QoSLevelExactyleOnce qosLevel = 2
 )
 
 // Control Packet types
@@ -101,6 +101,7 @@ func getFixedHeader(r io.Reader) (fh FixedHeader, err error) {
 		return FixedHeader{}, errors.New("Failed to read MQTT Packet Control Type from Client Stream")
 	}
 	fh.ControlPacketType = ControlPacketType(buf[0] >> 4)
+	fh.Flags = buf[0] & 15
 	remainingLength, err := getRemainingLength(r) // Length VariableHeader + Payload
 	if err != nil {
 		return FixedHeader{}, err
@@ -152,7 +153,12 @@ func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPa
 
 		return packet, nil
 	case PUBLISH:
-		vh, vhLength, err := readPublishVariableHeader(remainingReader, fh.Flags)
+		flags, err := interpretPublishHeaderFlags(fh.Flags)
+		if err != nil {
+			return nil, err
+		}
+
+		vh, vhLength, err := readPublishVariableHeader(remainingReader, flags)
 		if err != nil {
 			return nil, err
 		}
@@ -163,9 +169,10 @@ func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPa
 		}
 
 		packet := &PublishControlPacket{
-			FixedHeader:    fh,
-			VariableHeader: vh,
-			Payload:        payload,
+			FixedHeader:      fh,
+			FixedHeaderFlags: flags,
+			VariableHeader:   vh,
+			Payload:          payload,
 		}
 		return packet, nil
 
@@ -243,7 +250,7 @@ func (fh *FixedHeader) WriteTo(w io.Writer) (n int64, err error) {
 
 }
 
-func readStringLength(r io.Reader) (len int, err error) {
+func readUint16(r io.Reader) (len int, err error) {
 	buf := make([]byte, 2)
 	n, err := io.ReadFull(r, buf)
 	if err != nil {

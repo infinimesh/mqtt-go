@@ -19,14 +19,21 @@ package packet
 
 import (
 	"errors"
+	"fmt"
 	"io"
 )
 
 type PublishControlPacket struct {
-	FixedHeader    FixedHeader
-	VariableHeader PublishVariableHeader
+	FixedHeader      FixedHeader
+	FixedHeaderFlags PublishHeaderFlags
+	VariableHeader   PublishVariableHeader
+	Payload          []byte
+}
 
-	Payload []byte
+type PublishHeaderFlags struct {
+	QoS    qosLevel
+	Dup    bool
+	Retain bool
 }
 
 type PublishVariableHeader struct {
@@ -34,26 +41,26 @@ type PublishVariableHeader struct {
 	PacketID int
 }
 
-func interpretHeaderFlags(header byte) (dup, retain bool, qos qosLevel, err error) {
-	retain = header&1 > 0
-	dup = header&8 > 0
+func interpretPublishHeaderFlags(header byte) (flags PublishHeaderFlags, err error) {
+	flags.Retain = header&1 > 0
+	flags.Dup = header&8 > 0
 
 	if header&2 > 0 && header&4 > 0 {
 		err = errors.New("Both bits for QoS are set, this is invalid")
 	}
 
 	if header&2 > 0 {
-		qos = qosLevelAtLeastOnce
+		flags.QoS = QoSLevelAtLeastOnce
 	} else if header&4 > 0 {
-		qos = qosLevelExactyleOnce
+		flags.QoS = QoSLevelExactyleOnce
 	} else {
-		qos = qosLevelNone
+		flags.QoS = QoSLevelNone
 	}
 	return
 }
 
-func readPublishVariableHeader(r io.Reader, headerFlags byte) (vh PublishVariableHeader, len int, err error) {
-	topicLength, err := readStringLength(r)
+func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh PublishVariableHeader, len int, err error) {
+	topicLength, err := readUint16(r)
 	len += 2
 	if err != nil {
 		return
@@ -67,16 +74,12 @@ func readPublishVariableHeader(r io.Reader, headerFlags byte) (vh PublishVariabl
 
 	vh.Topic = string(bufTopic)
 
-	_, _, qos, err := interpretHeaderFlags(headerFlags)
-	if err != nil {
-		return PublishVariableHeader{}, len, err
-	}
-
-	if qos == qosLevelAtLeastOnce || qos == qosLevelExactyleOnce {
-		vh.PacketID, err = readStringLength(r)
+	if flags.QoS == QoSLevelAtLeastOnce || flags.QoS == QoSLevelExactyleOnce {
+		vh.PacketID, err = readUint16(r)
 		if err != nil {
 			return
 		}
+		fmt.Println("QoS > 0, PacketID =", vh.PacketID)
 		len += 2
 	}
 

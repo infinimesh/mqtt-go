@@ -9,5 +9,5 @@ func TestInterpretHeaderFlags(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, dup)
 	assert.True(t, retain)
-	assert.Equal(t, qosLevelAtLeastOnce, qos, "Expected at least once")
+	assert.Equal(t, QoSLevelAtLeastOnce, qos, "Expected at least once")
 }

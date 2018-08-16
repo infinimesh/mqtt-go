@@ -198,7 +198,6 @@ func getRemainingLength(r io.Reader) (remaining int, err error) {
 		valueThisTime := int(b[0] & 127)
 		remaining += valueThisTime * multiplier
 		if err != nil {
-			err = errors.New("couldnt get remaining length")
 			return remaining, err
 		}
 		if n != 1 {

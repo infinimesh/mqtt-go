@@ -41,9 +41,6 @@ func (p *ConnAckControlPacket) WriteTo(w io.Writer) (n int64, err error) {
 	}
 	nWritten, err = p.VariableHeader.WriteTo(w)
 	n += nWritten
-	if err != nil {
-		return n, err
-	}
 	return n, err
 }
 

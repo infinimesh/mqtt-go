@@ -116,12 +116,7 @@ func (p *PublishControlPacket) WriteTo(w io.Writer) (n int64, err error) {
 
 	nWritten, err = io.Copy(w, bytes.NewReader(p.Payload))
 	n += nWritten
-	if err != nil {
-		return n, err
-	}
-
 	return n, err
-
 }
 
 func (c *PublishVariableHeader) WriteTo(w io.Writer) (n int64, err error) {

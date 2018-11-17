@@ -18,6 +18,8 @@
 package packet
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"io"
 )
@@ -88,4 +90,45 @@ func readPublishPayload(r io.Reader, len int) (buf []byte, err error) {
 	buf = make([]byte, len)
 	_, err = io.ReadFull(r, buf)
 	return
+}
+
+func (p *PublishControlPacket) WriteTo(w io.Writer) (n int64, err error) {
+	var nWritten int64
+
+	// Calc Variable Header + Payload
+	p.FixedHeader.RemainingLength = 2 + len(p.VariableHeader.Topic) + len(p.Payload)
+
+	if p.FixedHeaderFlags.QoS == QoSLevelAtLeastOnce || p.FixedHeaderFlags.QoS == QoSLevelExactyleOnce {
+		p.FixedHeader.RemainingLength += 2
+	}
+
+	nWritten, err = p.FixedHeader.WriteTo(w)
+	n += nWritten
+	if err != nil {
+		return n, err
+	}
+
+	nWritten, err = p.VariableHeader.WriteTo(w)
+	n += nWritten
+	if err != nil {
+		return n, err
+	}
+
+	nWritten, err = io.Copy(w, bytes.NewReader(p.Payload))
+	n += nWritten
+	if err != nil {
+		return n, err
+	}
+
+	return n, err
+
+}
+
+func (c *PublishVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, uint16(len(c.Topic)))
+
+	// TODO maybe write packetID if QoS... we dont do it for now
+
+	return io.Copy(w, bytes.NewReader(b))
 }

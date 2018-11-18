@@ -61,6 +61,10 @@ func readSubscribePayload(r io.Reader, remainingLength int) (n int, payload Subs
 			return n, SubscribePayload{}, errors.New("Invalid Subscribe payload. Reserved bits of QoS are non-zero")
 		}
 
+		if qos[0]&1 > 0 && qos[0]&2 > 0 {
+			return n, SubscribePayload{}, errors.New("Invalid QoS level in payload. It is not allowed to set both bits")
+		}
+
 		if qos[0]&1 > 0 {
 			sub.QoS = QoSLevelAtLeastOnce
 		} else if qos[0]&2 > 0 {

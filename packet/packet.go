@@ -132,6 +132,7 @@ func ReadPacket(r io.Reader) (ControlPacket, error) {
 	return parseToConcretePacket(remainingReader, fh)
 }
 
+// nolint: gocyclo
 func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPacket, error) {
 	switch fh.ControlPacketType {
 	case CONNECT:

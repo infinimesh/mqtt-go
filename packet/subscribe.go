@@ -39,6 +39,9 @@ func readSubscribePayload(r io.Reader, remainingLength int) (n int, payload Subs
 	for n < remainingLength {
 		topicLength, err := readUint16(r)
 		n += 2 // TODO get this info from readUint16, in case of errors it's maybe not exactly 2
+		if err != nil {
+			return n, SubscribePayload{}, err
+		}
 
 		topic := make([]byte, topicLength)
 		bytesRead, err := io.ReadFull(r, topic)

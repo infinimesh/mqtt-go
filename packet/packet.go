@@ -176,7 +176,23 @@ func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPa
 			Payload:          payload,
 		}
 		return packet, nil
+	case SUBSCRIBE:
+		vhLen, vh, err := readSubscribeVariableHeader(remainingReader)
+		if err != nil {
+			return nil, err
+		}
 
+		_, payload, err := readSubscribePayload(remainingReader, fh.RemainingLength-vhLen)
+		if err != nil {
+			return nil, err
+		}
+
+		packet := &SubscribeControlPacket{
+			FixedHeader:    fh,
+			VariableHeader: vh,
+			Payload:        payload,
+		}
+		return packet, nil
 	case DISCONNECT:
 		fmt.Println("Client disconnected")
 		return nil, errors.New("Client disconnected")
@@ -250,7 +266,10 @@ func (fh *FixedHeader) WriteTo(w io.Writer) (n int64, err error) {
 
 }
 
-func readUint16(r io.Reader) (len int, err error) {
+// Allocating here everytime is super inefficient, better pass a byte
+// slice
+// TODO return number of bytes read
+func readUint16(r io.Reader) (result int, err error) {
 	buf := make([]byte, 2)
 	n, err := io.ReadFull(r, buf)
 	if err != nil {

@@ -32,7 +32,7 @@ type PublishControlPacket struct {
 }
 
 type PublishHeaderFlags struct {
-	QoS    qosLevel
+	QoS    QosLevel
 	Dup    bool
 	Retain bool
 }
@@ -53,7 +53,7 @@ func interpretPublishHeaderFlags(header byte) (flags PublishHeaderFlags, err err
 	if header&2 > 0 {
 		flags.QoS = QoSLevelAtLeastOnce
 	} else if header&4 > 0 {
-		flags.QoS = QoSLevelExactyleOnce
+		flags.QoS = QoSLevelExactlyOnce
 	} else {
 		flags.QoS = QoSLevelNone
 	}
@@ -75,7 +75,7 @@ func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh Publis
 
 	vh.Topic = string(bufTopic)
 
-	if flags.QoS == QoSLevelAtLeastOnce || flags.QoS == QoSLevelExactyleOnce {
+	if flags.QoS == QoSLevelAtLeastOnce || flags.QoS == QoSLevelExactlyOnce {
 		vh.PacketID, err = readUint16(r)
 		if err != nil {
 			return
@@ -98,7 +98,7 @@ func (p *PublishControlPacket) WriteTo(w io.Writer) (n int64, err error) {
 	// Calc Variable Header + Payload
 	p.FixedHeader.RemainingLength = 2 + len(p.VariableHeader.Topic) + len(p.Payload)
 
-	if p.FixedHeaderFlags.QoS == QoSLevelAtLeastOnce || p.FixedHeaderFlags.QoS == QoSLevelExactyleOnce {
+	if p.FixedHeaderFlags.QoS == QoSLevelAtLeastOnce || p.FixedHeaderFlags.QoS == QoSLevelExactlyOnce {
 		p.FixedHeader.RemainingLength += 2
 	}
 

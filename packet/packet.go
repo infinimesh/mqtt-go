@@ -27,13 +27,13 @@ import (
 
 type ControlPacketType byte
 
-type qosLevel int
+type QosLevel int
 
 // MQTT Quality of Service levels
 const (
-	QoSLevelNone         qosLevel = 0
-	QoSLevelAtLeastOnce  qosLevel = 1
-	QoSLevelExactyleOnce qosLevel = 2
+	QoSLevelNone        QosLevel = 0
+	QoSLevelAtLeastOnce QosLevel = 1
+	QoSLevelExactlyOnce QosLevel = 2
 )
 
 // Control Packet types

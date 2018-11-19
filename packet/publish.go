@@ -123,7 +123,42 @@ func (c *PublishVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, uint16(len(c.Topic)))
 
-	// TODO maybe write packetID if QoS... we dont do it for now
+	var written int
+	written, err = w.Write(b)
+	n += int64(written)
+	if err != nil {
+		return
+	}
+	written, err = w.Write([]byte(c.Topic))
+	n += int64(written)
+	if err != nil {
+		return
+	}
 
-	return io.Copy(w, bytes.NewReader(b))
+	return
+}
+
+func NewPublish(topic string, packetID uint16, payload []byte) *PublishControlPacket {
+	fh := FixedHeader{
+		ControlPacketType: PUBLISH,
+		RemainingLength:   0, // will be populated by WriteTo for the moment
+	}
+
+	vh := PublishVariableHeader{
+		Topic:    topic,
+		PacketID: int(packetID),
+	}
+
+	flags := PublishHeaderFlags{
+		QoS:    QoSLevelNone, // TODO
+		Dup:    false,        // TODO
+		Retain: false,        // TODO
+	}
+
+	return &PublishControlPacket{
+		FixedHeader:      fh,
+		FixedHeaderFlags: flags,
+		VariableHeader:   vh,
+		Payload:          payload,
+	}
 }

@@ -24,12 +24,6 @@ import (
 	"io"
 )
 
-type PublishProperties struct {
-	TopicAlias            uint16 //topic alias id, to identify topic with integer value
-	MessageExpiryInterval uint32 // to delete copy of message for subscriber when server couldn't manage the delivery for the defined interval
-	ResponseTopic         string //topic name for response, identifies the message as request
-}
-
 type PublishControlPacket struct {
 	FixedHeader      FixedHeader
 	FixedHeaderFlags PublishHeaderFlags
@@ -44,9 +38,8 @@ type PublishHeaderFlags struct {
 }
 
 type PublishVariableHeader struct {
-	Topic             string
-	PacketID          int
-	PublishProperties PublishProperties
+	Topic    string
+	PacketID int
 }
 
 func interpretPublishHeaderFlags(header byte) (flags PublishHeaderFlags, err error) {
@@ -90,28 +83,6 @@ func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh Publis
 		len += 2
 	}
 
-	//publish properties added
-	topicAliasIdentifier := make([]byte, 1)
-	n, err = r.Read(topicAliasIdentifier)
-	len += n
-	if err != nil {
-		return
-	}
-	vh.PublishProperties.TopicAlias = binary.BigEndian.Uint16(topicAliasIdentifier)
-
-	messageExpiryInterval := make([]byte, 2)
-	n, err = r.Read(messageExpiryInterval)
-	if err != nil {
-		return
-	}
-	vh.PublishProperties.MessageExpiryInterval = binary.BigEndian.Uint32(messageExpiryInterval)
-
-	responseTopic := make([]byte, 1)
-	n, err = r.Read(responseTopic)
-	if err != nil {
-		return
-	}
-	vh.PublishProperties.ResponseTopic = string(responseTopic)
 	return
 }
 
@@ -163,6 +134,7 @@ func (c *PublishVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
 	if err != nil {
 		return
 	}
+
 	return
 }
 

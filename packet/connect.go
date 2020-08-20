@@ -122,9 +122,6 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 	// TODO Connect Properties
 	connectMaximumPacketSize := make([]byte, 4)
 	n, err = r.Read(connectMaximumPacketSize)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect maximum packet size byte")
-	}
 	len += n
 	if err != nil {
 		return
@@ -133,9 +130,6 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 
 	connectRecieveMaximumValue := make([]byte, 2)
 	n, err = r.Read(connectRecieveMaximumValue)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect recieve maximum value byte")
-	}
 	len += n
 	if err != nil {
 		return
@@ -144,9 +138,6 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 
 	connectRequestProblemInfo := make([]byte, 1)
 	n, err = r.Read(connectRequestProblemInfo)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect request problem info byte")
-	}
 	len += n
 	if err != nil {
 		return
@@ -155,9 +146,6 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 
 	connectRequestResponseInfo := make([]byte, 1)
 	n, err = r.Read(connectRequestResponseInfo)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect response info byte")
-	}
 	len += n
 	if err != nil {
 		return
@@ -166,9 +154,6 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 
 	connectTopicAliasMaxValue := make([]byte, 2)
 	n, err = r.Read(connectTopicAliasMaxValue)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect response info byte")
-	}
 	len += n
 	if err != nil {
 		return

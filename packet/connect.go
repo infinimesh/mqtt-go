@@ -28,13 +28,13 @@ type ConnectFlags struct {
 	UserName   bool
 	Password   bool
 	WillRetain bool
-	WillQoS    byte // 2 bytes actually
+	WillQoS    int
 	WillFlag   bool
 	CleanStart bool
 }
 
 type ConnectProperties struct {
-	RecieveMaximumValue    uint32 //limits the number of QoS 1 and QoS 2 Pub
+	RecieveMaximumValue    uint32 //limits the number of QoS 1 and QoS 2 Pub at Client - default 65,535
 	MaximumPacketSize      uint32 //represents max packet size client accepts
 	TopicAliasMaximumValue uint16 //max num of topic alias accepted by client
 	RequestResponseInfo    bool   //0 = no response info in CONNACK
@@ -109,7 +109,15 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 	}
 
 	hdr.KeepAlive = int(binary.BigEndian.Uint16(keepAliveByte))
+
 	// TODO Will QoS
+	if connectFlagsByte[0]&16 == 1 && connectFlagsByte[0]&8 == 1 {
+		hdr.ConnectFlags.WillQoS = 3
+	} else if connectFlagsByte[0]&8 == 1 {
+		hdr.ConnectFlags.WillQoS = 2
+	} else {
+		hdr.ConnectFlags.WillQoS = 1
+	}
 
 	// TODO Connect Properties
 	connectMaximumPacketSize := make([]byte, 4)

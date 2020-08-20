@@ -34,6 +34,7 @@ type ConnectFlags struct {
 }
 
 type ConnectProperties struct {
+	PropertyLength         uint64
 	RecieveMaximumValue    uint32 //limits the number of QoS 1 and QoS 2 Pub at Client - default 65,535
 	MaximumPacketSize      uint32 //represents max packet size client accepts
 	TopicAliasMaximumValue uint16 //max num of topic alias accepted by client
@@ -120,61 +121,58 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 	}
 
 	// TODO Connect Properties
-	connectMaximumPacketSize := make([]byte, 4)
-	n, err = r.Read(connectMaximumPacketSize)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect maximum packet size byte")
-	}
+	connectPropertiesLength := make([]byte, 4)
+	n, err = r.Read(connectPropertiesLength)
 	len += n
 	if err != nil {
-		return
+		fmt.Println("Could not read connect properties byte")
 	}
-	hdr.ConnectProperties.MaximumPacketSize = binary.BigEndian.Uint32(connectMaximumPacketSize)
+	if n != 4 {
+		fmt.Println("Connect Properties are not set, but no worries!")
+	}
+	hdr.ConnectProperties.PropertyLength = binary.BigEndian.Uint64(connectPropertiesLength)
+	if hdr.ConnectProperties.PropertyLength > 0 {
+		connectRecieveMaximumValue := make([]byte, 2)
+		n, err = r.Read(connectRecieveMaximumValue)
 
-	connectRecieveMaximumValue := make([]byte, 2)
-	n, err = r.Read(connectRecieveMaximumValue)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect recieve maximum value byte")
+		if err != nil {
+			return
+		}
+		hdr.ConnectProperties.RecieveMaximumValue = binary.BigEndian.Uint32(connectRecieveMaximumValue)
 	}
-	len += n
-	if err != nil {
-		return
-	}
-	hdr.ConnectProperties.RecieveMaximumValue = binary.BigEndian.Uint32(connectRecieveMaximumValue)
+	/*
+	   connectMaximumPacketSize := make([]byte, 4)
+	   n, err = r.Read(connectMaximumPacketSize)
+	   len += n
+	   if err != nil {
+	       return
+	   }
+	   hdr.ConnectProperties.MaximumPacketSize = binary.BigEndian.Uint32(connectMaximumPacketSize)
 
-	connectRequestProblemInfo := make([]byte, 1)
-	n, err = r.Read(connectRequestProblemInfo)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect request problem info byte")
-	}
-	len += n
-	if err != nil {
-		return
-	}
-	hdr.ConnectProperties.RequestProblemInfo = connectRequestProblemInfo[0]&1 == 1
+	   connectRequestProblemInfo := make([]byte, 1)
+	   n, err = r.Read(connectRequestProblemInfo)
+	   len += n
+	   if err != nil {
+	       return
+	   }
+	   hdr.ConnectProperties.RequestProblemInfo = connectRequestProblemInfo[0]&1 == 1
 
-	connectRequestResponseInfo := make([]byte, 1)
-	n, err = r.Read(connectRequestResponseInfo)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect response info byte")
-	}
-	len += n
-	if err != nil {
-		return
-	}
-	hdr.ConnectProperties.RequestResponseInfo = connectRequestResponseInfo[0]&1 == 1
+	   connectRequestResponseInfo := make([]byte, 1)
+	   n, err = r.Read(connectRequestResponseInfo)
+	   len += n
+	   if err != nil {
+	       return
+	   }
+	   hdr.ConnectProperties.RequestResponseInfo = connectRequestResponseInfo[0]&1 == 1
 
-	connectTopicAliasMaxValue := make([]byte, 2)
-	n, err = r.Read(connectTopicAliasMaxValue)
-	if n != 1 {
-		return hdr, len, errors.New("Failed to read connect response info byte")
-	}
-	len += n
-	if err != nil {
-		return
-	}
-	hdr.ConnectProperties.TopicAliasMaximumValue = binary.BigEndian.Uint16(connectTopicAliasMaxValue)
-
+	   connectTopicAliasMaxValue := make([]byte, 2)
+	   n, err = r.Read(connectTopicAliasMaxValue)
+	   len += n
+	   if err != nil {
+	       return
+	   }
+	   hdr.ConnectProperties.TopicAliasMaximumValue = binary.BigEndian.Uint16(connectTopicAliasMaxValue)
+	*/
 	return
 }
 

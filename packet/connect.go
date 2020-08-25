@@ -134,33 +134,19 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 	//reading variable header properties length
 	propertiesLength := make([]byte, 1)
 	n, err = r.Read(propertiesLength)
-	len += n
 	if err != nil {
 		return hdr, len, errors.New("Could not read properties length")
 	}
 	fmt.Printf("optional properties length %v and propertiesLength= %v\n ", n, propertiesLength)
-	hdr.ConnectProperties.PropertyLength = int(propertiesLength[0])
-	if hdr.ConnectProperties.PropertyLength < 1 {
+	if n != 1 {
 		fmt.Printf("No optional properties added")
 	} else {
+		hdr.ConnectProperties.PropertyLength = int(propertiesLength[0])
 		len += hdr.ConnectProperties.PropertyLength
-		hdr, _ = readConnectProperties(r, hdr)
 	}
 
 	fmt.Printf("Connect calculated length n %v\n", len)
 	return
-}
-
-func readConnectProperties(r io.Reader, hdr ConnectVariableHeader) (ConnectVariableHeader, error) {
-	connectProperties := make([]byte, hdr.ConnectProperties.PropertyLength)
-	n, err := io.ReadFull(r, connectProperties)
-	if err != nil {
-		return hdr, err
-	}
-	if n != hdr.ConnectProperties.PropertyLength {
-		return hdr, errors.New("Connect Properties length incorrect")
-	}
-	return hdr, nil
 }
 
 func readConnectPayload(r io.Reader, len int) (ConnectPayload, error) {
@@ -187,10 +173,7 @@ func readConnectPayload(r io.Reader, len int) (ConnectPayload, error) {
 
 	clientIDLengthBytes := payloadBytes[:2]
 	fmt.Printf("clientIDLengthBytes = %v\n", clientIDLengthBytes)
-	clientIDLength := int(clientIDLengthBytes[0])
-	if clientIDLength == 0 {
-		clientIDLength = int(binary.BigEndian.Uint16(clientIDLengthBytes))
-	}
+	clientIDLength := binary.BigEndian.Uint16(clientIDLengthBytes)
 	fmt.Printf("clientIDLength = %v\n", clientIDLength)
 	clientID := string(payloadBytes[2 : 2+clientIDLength])
 	return ConnectPayload{

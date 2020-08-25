@@ -130,22 +130,7 @@ func getConnectVariableHeader(r io.Reader) (hdr ConnectVariableHeader, len int, 
 	} else {
 		hdr.ConnectFlags.WillQoS = 1
 	}
-
-	//reading variable header properties length
-	propertiesLength := make([]byte, 1)
-	n, err = io.ReadFull(r, propertiesLength)
-	if err != nil {
-		return hdr, len, errors.New("Could not read properties length")
-	}
-	fmt.Printf("optional properties length %v and propertiesLength= %v\n ", n, propertiesLength)
-	if n != 1 {
-		fmt.Printf("No optional properties added")
-	} else {
-		hdr.ConnectProperties.PropertyLength = int(binary.BigEndian.Uint16(propertiesLength))
-		len += hdr.ConnectProperties.PropertyLength
-	}
 	fmt.Printf("Connect calculated length n %v\n", len)
-
 	return
 }
 

@@ -24,11 +24,18 @@ import (
 	"io"
 )
 
+const (
+	RecieveMaximumID      = 33
+	MaximumPacketSizeID   = 39
+	TopicAliasMaximumID   = 34
+	RequestResponseInfoID = 25
+	RequestProblemInfoID  = 23
+)
+
 type ConnectProperties struct {
 	PropertyLength         int //variable header properties length
 	RecieveMaximumValue    int //limits the number of QoS 1 and QoS 2 Pub at Client - default 65,535
 	MaximumPacketSize      int //represents max packet size client accepts
-	SessionExpiryInterval  int //sesion expiry interval
 	TopicAliasMaximumValue int //max num of topic alias accepted by client
 	RequestResponseInfo    int //0 = no response info in CONNACK
 	RequestProblemInfo     int //0 = no reason string in CONNACK

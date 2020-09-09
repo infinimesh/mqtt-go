@@ -93,11 +93,12 @@ func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh Publis
 	}
 
 	propertyLength := make([]byte, 1)
-	n, err = r.Read(propertyLength)
+	n, err = io.ReadFull(r, propertyLength)
 	len += n
 	if err != nil {
 		return
 	}
+
 	vh.PublishProperties.PropertyLength = int(propertyLength[0])
 	if vh.PublishProperties.PropertyLength < 1 {
 		fmt.Printf("No optional publish properties added")

@@ -69,7 +69,7 @@ func interpretPublishHeaderFlags(header byte) (flags PublishHeaderFlags, err err
 	return
 }
 
-func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh PublishVariableHeader, len int, err error) {
+func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags, protoLevel byte) (vh PublishVariableHeader, len int, err error) {
 	topicLength, err := readUint16(r)
 	len += 2
 	if err != nil {
@@ -92,21 +92,23 @@ func readPublishVariableHeader(r io.Reader, flags PublishHeaderFlags) (vh Publis
 		len += 2
 	}
 
-	propertyLength := make([]byte, 1)
-	n, err = io.ReadFull(r, propertyLength)
-	len += n
-	if err != nil {
-		return
+	fmt.Printf("protoLevel added : %v, %v", protoLevel, int(protoLevel))
+	if int(protoLevel) == 5 {
+		propertyLength := make([]byte, 1)
+		n, err = r.Read(propertyLength)
+		fmt.Printf("Prop length %v", n)
+		len += n
+		if err != nil {
+			return
+		}
+		vh.PublishProperties.PropertyLength = int(propertyLength[0])
+		if vh.PublishProperties.PropertyLength == 0 {
+			fmt.Printf("No optional publish properties added")
+		} else {
+			len += vh.PublishProperties.PropertyLength
+			vh, _ = readPublishProperties(r, vh)
+		}
 	}
-
-	vh.PublishProperties.PropertyLength = int(propertyLength[0])
-	if vh.PublishProperties.PropertyLength < 1 {
-		fmt.Printf("No optional publish properties added")
-	} else {
-		len += vh.PublishProperties.PropertyLength
-		vh, _ = readPublishProperties(r, vh)
-	}
-
 	return
 }
 
@@ -199,15 +201,14 @@ func NewPublish(topic string, packetID uint16, payload []byte) *PublishControlPa
 		ControlPacketType: PUBLISH,
 		RemainingLength:   0, // will be populated by WriteTo for the moment
 	}
-
-	pb := PublishProperties{
-		PropertyLength: 0,
-	}
-
+	/*
+		pb := PublishProperties{
+			PropertyLength: 0,
+		}
+	*/
 	vh := PublishVariableHeader{
-		Topic:             topic,
-		PacketID:          int(packetID),
-		PublishProperties: pb,
+		Topic:    topic,
+		PacketID: int(packetID),
 	}
 
 	flags := PublishHeaderFlags{

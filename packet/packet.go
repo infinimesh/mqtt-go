@@ -29,6 +29,8 @@ type ControlPacketType byte
 
 type QosLevel int
 
+var protocolLevel byte
+
 // MQTT Quality of Service levels
 const (
 	QoSLevelNone        QosLevel = 0
@@ -114,6 +116,16 @@ func getProtocolName(r io.Reader) (protocolName string, len int, err error) {
 	return string(protocolNameBuffer), len, nil
 }
 
+func getProtocolLevel(r io.Reader) (protocolLevel byte, len int, err error) {
+	// Get Proto level
+	protocolLevelBytes := make([]byte, 1)
+	len, err = r.Read(protocolLevelBytes)
+	if err != nil {
+		return protocolLevelBytes[0], len, err
+	}
+	return protocolLevelBytes[0], len, nil
+}
+
 func getFixedHeader(r io.Reader) (fh FixedHeader, err error) {
 	buf := make([]byte, 1)
 	n, err := io.ReadFull(r, buf)
@@ -159,6 +171,7 @@ func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPa
 	switch fh.ControlPacketType {
 	case CONNECT:
 		vh, variableHeaderSize, err := getConnectVariableHeader(remainingReader)
+		protocolLevel = vh.ProtocolLevel
 		if err != nil {
 			return nil, err
 		}
@@ -182,12 +195,13 @@ func parseToConcretePacket(remainingReader io.Reader, fh FixedHeader) (ControlPa
 			return nil, err
 		}
 
-		vh, vhLength, err := readPublishVariableHeader(remainingReader, flags)
+		vh, vhLength, err := readPublishVariableHeader(remainingReader, flags, protocolLevel)
 		if err != nil {
 			return nil, err
 		}
 
 		payload, err := readPublishPayload(remainingReader, fh.RemainingLength-vhLength)
+		fmt.Printf("Publish payload :%v\n", payload)
 		if err != nil {
 			return nil, err
 		}

@@ -39,7 +39,7 @@ func main() {
 
 func handleConn(c net.Conn) {
 	defer fmt.Println("Exited loop of connection")
-	p, err := packet.ReadPacket(c)
+	p, err := packet.ReadPacket(c, 0)
 	if err != nil {
 		fmt.Printf("Error while reading connect packet: %v\n", err)
 		return
@@ -68,7 +68,7 @@ func handleConn(c net.Conn) {
 	}
 
 	for {
-		p, err := packet.ReadPacket(c)
+		p, err := packet.ReadPacket(c, connectPacket.VariableHeader.ProtocolLevel)
 		if err != nil {
 			fmt.Printf("Error while reading packet in client loop: %v. Disconnecting client.\n", err)
 			err := c.Close()

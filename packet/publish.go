@@ -31,6 +31,7 @@ type PublishProperties struct {
 	TopicAlias            int    //2 byte
 	ResponseTopic         string //
 	CorrelationData       string
+	UserProperty          string
 }
 type PublishControlPacket struct {
 	FixedHeader      FixedHeader
@@ -138,7 +139,7 @@ func readPublishProperties(r io.Reader, vh PublishVariableHeader) (PublishVariab
 		}
 		if publishPropertyID == USER_PROPERTY_ID {
 			userProperty := publishProperties[1 : USER_PROPERTY_LENGTH+1]
-			vh.PublishProperties.ResponseTopic = string(userProperty)
+			vh.PublishProperties.UserProperty = string(userProperty)
 			propertiesLength -= USER_PROPERTY_LENGTH + 1
 		} else {
 			fmt.Printf("%v Connect Property is not supported yet..", publishProperties[0])

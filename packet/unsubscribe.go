@@ -31,7 +31,7 @@ type UnsubscribeVariableHeader struct {
 }
 
 type UnsubscribePayload struct {
-	Subscriptions []Subscription
+	UnSubscriptions []Unsubscription
 }
 
 type Unsubscription struct {
@@ -119,8 +119,8 @@ func readUnsubscribePayload(r io.Reader, remainingLength int) (n int, payload Un
 			return n, UnsubscribePayload{}, err
 		}
 
-		sub := Subscription{}
-		sub.Topic = string(topic)
+		unSub := Unsubscription{}
+		unSub.Topic = string(topic)
 
 		if qos[0]&252 > 0 {
 			return n, UnsubscribePayload{}, errors.New("Invalid Unsubscribe payload. Reserved bits of QoS are non-zero")
@@ -131,13 +131,13 @@ func readUnsubscribePayload(r io.Reader, remainingLength int) (n int, payload Un
 		}
 
 		if qos[0]&1 > 0 {
-			sub.QoS = QoSLevelAtLeastOnce
+			unSub.QoS = QoSLevelAtLeastOnce
 		} else if qos[0]&2 > 0 {
-			sub.QoS = QoSLevelExactlyOnce
+			unSub.QoS = QoSLevelExactlyOnce
 		} else {
-			sub.QoS = QoSLevelNone
+			unSub.QoS = QoSLevelNone
 		}
-		payload.Subscriptions = append(payload.Subscriptions, sub)
+		payload.UnSubscriptions = append(payload.UnSubscriptions, unSub)
 	}
 	return
 }

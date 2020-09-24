@@ -177,6 +177,10 @@ func (p *PublishControlPacket) WriteTo(w io.Writer) (n int64, err error) {
 	// Calc Variable Header + Payload
 	p.FixedHeader.RemainingLength = 2 + len(p.VariableHeader.Topic) + len(p.Payload)
 
+	if p.VariableHeader.PublishProperties.PropertyLength > 0 {
+		p.FixedHeader.RemainingLength += 3
+	}
+
 	if p.FixedHeaderFlags.QoS == QoSLevelAtLeastOnce || p.FixedHeaderFlags.QoS == QoSLevelExactlyOnce {
 		p.FixedHeader.RemainingLength += 2
 	}

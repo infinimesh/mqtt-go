@@ -213,25 +213,36 @@ func (c *PublishVariableHeader) WriteTo(w io.Writer) (n int64, err error) {
 	if err != nil {
 		return
 	}
-
+	if c.PublishProperties.PropertyLength > 0 {
+		binary.BigEndian.PutUint16(b, uint16(c.PublishProperties.PropertyLength))
+		written, err = w.Write(b)
+		n += int64(written)
+		if err != nil {
+			return
+		}
+		written, err = w.Write([]byte(c.PublishProperties.ResponseTopic))
+		n += int64(written)
+		if err != nil {
+			return
+		}
+	}
 	return
 }
 
-func NewPublish(topic string, packetID uint16, payload []byte) *PublishControlPacket {
+func NewPublish(topic string, packetID uint16, payload []byte, protocolLevel byte) *PublishControlPacket {
 	fh := FixedHeader{
 		ControlPacketType: PUBLISH,
 		RemainingLength:   0, // will be populated by WriteTo for the moment
 	}
-	/*
-		pb := PublishProperties{
-			PropertyLength: 0,
-		}
-	*/
 	vh := PublishVariableHeader{
 		Topic:    topic,
 		PacketID: int(packetID),
 	}
-
+	if int(protocolLevel) == 5 {
+		vh.PublishProperties = PublishProperties{
+			ResponseTopic: topic,
+		}
+	}
 	flags := PublishHeaderFlags{
 		QoS:    QoSLevelNone, // TODO
 		Dup:    false,        // TODO
